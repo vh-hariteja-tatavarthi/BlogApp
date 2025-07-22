@@ -10,7 +10,7 @@ import org.springframework.lang.Nullable;
 
 import java.util.Date;
 import java.util.List;
-
+@Data
 @Getter
 @Setter
 @ToString
