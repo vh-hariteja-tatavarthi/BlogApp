@@ -11,8 +11,10 @@ import org.springframework.lang.Nullable;
 import java.util.Date;
 import java.util.List;
 @Data
+@Builder
 @Getter
 @Setter
+@AllArgsConstructor
 @ToString
 //@RequiredArgsConstructor
 @NoArgsConstructor (access = AccessLevel.PROTECTED)
