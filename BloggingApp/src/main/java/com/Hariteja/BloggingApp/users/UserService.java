@@ -3,6 +3,7 @@ package com.Hariteja.BloggingApp.users;
 import com.Hariteja.BloggingApp.users.dto.CreateUserRequest;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -11,14 +12,17 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
-    UserService(UserRepository userRepository, ModelMapper modelMapper){
+    private final PasswordEncoder passwordEncoder;
+    UserService(UserRepository userRepository, ModelMapper modelMapper, PasswordEncoder passwordEncoder){
         this.userRepository=userRepository;
         this.modelMapper=modelMapper;
+        this.passwordEncoder=passwordEncoder;
     }
 
     public UserEntity createUser(CreateUserRequest createUserRequest){
 
         UserEntity newUser= modelMapper.map(createUserRequest,UserEntity.class);
+        newUser.setPassword(passwordEncoder.encode(createUserRequest.getPassword()));
 //
 //            var newUser= UserEntity.builder()
 //                    .username(createUserRequest.getUsername())
@@ -36,18 +40,24 @@ public class UserService {
         return userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
     }
 
-    public UserEntity loginUser(String username, String Password){
+    public UserEntity loginUser(String username, String password){
         var user= userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
-        //Check the Password
-
+        var passMatch= passwordEncoder.matches(password,user.getPassword());
+        if(!passMatch) throw new InvalidCredentialException();
         return user;
     }
+
     public static class UserNotFoundException extends IllegalArgumentException{
         public UserNotFoundException(String username){
-            super("User"+ username+" Not Found");
+            super("User with username"+ username+" Not Found");
         }
         public UserNotFoundException(Long userid){
             super("User with id:"+ userid + "Not found");
+        }
+    }
+    public static class InvalidCredentialException extends IllegalArgumentException{
+        public InvalidCredentialException(){
+            super("username and password doesn't match");
         }
     }
 }
