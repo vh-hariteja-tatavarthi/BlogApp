@@ -1,5 +1,6 @@
 package com.Hariteja.BloggingApp.users;
 
+import com.Hariteja.BloggingApp.Security.JWTService;
 import com.Hariteja.BloggingApp.common.dto.ExceptionResponse;
 import com.Hariteja.BloggingApp.users.dto.CreateUserRequest;
 import com.Hariteja.BloggingApp.users.dto.LoginRequest;
@@ -20,12 +21,16 @@ public class UsersController {
 
     private final UserService userService;
     private final ModelMapper modelMapper;
+    private final JWTService jwtService;
 
 
-    public UsersController(UserService userService, ModelMapper modelMapper) {
+    public UsersController(UserService userService, ModelMapper modelMapper,JWTService jwtService) {
         this.userService = userService;
         this.modelMapper=modelMapper;
+        this.jwtService=jwtService;
     }
+
+
 
     @GetMapping("")
     String getUsers(){
@@ -36,13 +41,17 @@ public class UsersController {
     ResponseEntity<UserResponse> signup(@RequestBody CreateUserRequest request){
         UserEntity savedUser= userService.createUser(request);
         URI savedUserURI = URI.create("/users/"+ savedUser.getId());
-        return ResponseEntity.created(savedUserURI).body(modelMapper.map(savedUser, UserResponse.class));
+        var userResponse = modelMapper.map(savedUser,UserResponse.class);
+        userResponse.setJwtToken(jwtService.createJWT(savedUser.getId()));
+        return ResponseEntity.created(savedUserURI).body(userResponse);
     }
 
     @PostMapping("/login")
     ResponseEntity<UserResponse> login(@RequestBody LoginRequest request){
         UserEntity savedUser= userService.loginUser(request.getUsername(), request.getPassword());
-        return ResponseEntity.ok().body(modelMapper.map(savedUser,UserResponse.class));
+        var userResponse = modelMapper.map(savedUser,UserResponse.class);
+        userResponse.setJwtToken(jwtService.createJWT(savedUser.getId()));
+        return ResponseEntity.ok().body(userResponse);
     }
 
     @ExceptionHandler({UserService.UserNotFoundException.class})

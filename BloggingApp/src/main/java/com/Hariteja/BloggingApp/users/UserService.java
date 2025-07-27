@@ -1,5 +1,6 @@
 package com.Hariteja.BloggingApp.users;
 
+import com.Hariteja.BloggingApp.Security.JWTService;
 import com.Hariteja.BloggingApp.users.dto.CreateUserRequest;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,9 @@ import java.util.Optional;
 
 @Service
 public class UserService {
+    @Autowired
+    JWTService jwtService;
+
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
@@ -44,6 +48,7 @@ public class UserService {
         var user= userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
         var passMatch= passwordEncoder.matches(password,user.getPassword());
         if(!passMatch) throw new InvalidCredentialException();
+//        System.out.println(jwtService.createJWT(user.getId()));
         return user;
     }
 
